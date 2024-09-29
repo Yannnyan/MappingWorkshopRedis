@@ -25,15 +25,18 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.query import GeoFilter, NumericFilter, Query
 from redis.commands.search.result import Result
 from redis.commands.search.suggestion import Suggestion
+import uuid
 #ss
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
 r = redis.Redis(decode_responses=True, host='redis-15241.c256.us-east-1-2.ec2.redns.redis-cloud.com',port=15241,password='redis12345')
-r.flushdb()
+# r.flushdb()
 ELEMENT_TYPES = ['airplane', 'motorcycle', 'bike', 'bird', 'person']
 TOTAL_ELEMENTS = 100
 movement_speed = 2  # default speed in seconds
+
+
 
 
 ###
@@ -52,7 +55,9 @@ def create_index():
             NumericField("$.speed",as_name="speed"),
             NumericField("$.direction",as_name="direction"),
             NumericField("$.lat",as_name="lat"),
-            NumericField("$.lng",as_name="lng")
+            NumericField("$.lng",as_name="lng"),
+            TagField("$.type", as_name="type"),
+            TextField("$.id",as_name="id")
         )
     try:
         r.ft("elements_idx").create_index(schema, definition=IndexDefinition(
@@ -77,13 +82,18 @@ def generate_elements():
         lng = random.uniform(-180, 180)
         speed = random.uniform(0.01, 0.1)  # Random speed
         direction = random.uniform(0, 360)  # Random direction in degrees
+        type = random.choice(ELEMENT_TYPES)
+        id = str(uuid.uuid4())
         element = {
             'speed': speed,
             'direction': direction,
             'lat': lat,
             'lng': lng,
+            'type': type,
+            'id': id
         }
-        r.set()
+        
+        r.json().set(f"element:{i}", Path.root_path(), element)
     print('Generated elements:', TOTAL_ELEMENTS)  # Debug print
 
 
@@ -177,7 +187,15 @@ def query_elements():
     # QUERY AND FILTER CODE GOES HERE
     # QUERY AND FILTER CODE GOES HERE
     # ...
+    user_elements_key = f"user:{user_id}:elements"
+    # user_stream_key = f"user:{user_id}:stream"
+    elements = r.smembers(user_elements_key)
+
+    elements_res = {}
+    for element_obj in elements:
+        elements_res[element_obj] = r.json().get(f"{element_obj}")
     ###
+
     return jsonify({"elements": elements_res})
 
 
