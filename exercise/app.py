@@ -32,7 +32,7 @@ socketio = SocketIO(app)
 r = redis.Redis(decode_responses=True, host='redis-15241.c256.us-east-1-2.ec2.redns.redis-cloud.com',port=15241,password='redis12345')
 r.flushdb()
 ELEMENT_TYPES = ['airplane', 'motorcycle', 'bike', 'bird', 'person']
-TOTAL_ELEMENTS = 10000
+TOTAL_ELEMENTS = 100
 movement_speed = 2  # default speed in seconds
 
 
