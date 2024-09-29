@@ -32,7 +32,7 @@ socketio = SocketIO(app)
 r = redis.Redis(host="redis-15241.c256.us-east-1-2.ec2.redns.redis-cloud.com", port=15241, password="redis12345", decode_responses=True)
 r.flushdb()
 ELEMENT_TYPES = ['airplane', 'motorcycle', 'bike', 'bird', 'person']
-TOTAL_ELEMENTS = 10000
+TOTAL_ELEMENTS = 100
 movement_speed = 2  # default speed in seconds
 
 
@@ -49,6 +49,10 @@ def create_index():
     schema = \
         (
             # HERE COMES THE DIFFERENT FIELDS IN THE SCHEMA
+            NumericField('$.speed', as_name="speed"),
+            NumericField('$.direction', as_name="direction"),
+            NumericField('$.lat', as_name="lat"),
+            NumericField('$.lng', as_name="age"),
         )
     try:
         r.ft("elements_idx").create_index(schema, definition=IndexDefinition(
@@ -79,6 +83,7 @@ def generate_elements():
             'lat': lat,
             'lng': lng,
         }
+        r.json().set(f"element:{i}", Path.root_path(), element)
     print('Generated elements:', TOTAL_ELEMENTS)  # Debug print
 
 
