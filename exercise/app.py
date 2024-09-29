@@ -25,11 +25,11 @@ from redis.commands.search.indexDefinition import IndexDefinition, IndexType
 from redis.commands.search.query import GeoFilter, NumericFilter, Query
 from redis.commands.search.result import Result
 from redis.commands.search.suggestion import Suggestion
-
+#ss
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = 'secret!'
 socketio = SocketIO(app)
-r = redis.Redis(decode_responses=True)
+r = redis.Redis(decode_responses=True, host='redis-15241.c256.us-east-1-2.ec2.redns.redis-cloud.com',port=15241,password='redis12345')
 r.flushdb()
 ELEMENT_TYPES = ['airplane', 'motorcycle', 'bike', 'bird', 'person']
 TOTAL_ELEMENTS = 10000
@@ -49,6 +49,10 @@ def create_index():
     schema = \
         (
             # HERE COMES THE DIFFERENT FIELDS IN THE SCHEMA
+            NumericField("$.speed",as_name="speed"),
+            NumericField("$.direction",as_name="direction"),
+            NumericField("$.lat",as_name="lat"),
+            NumericField("$.lng",as_name="lng")
         )
     try:
         r.ft("elements_idx").create_index(schema, definition=IndexDefinition(
@@ -79,6 +83,7 @@ def generate_elements():
             'lat': lat,
             'lng': lng,
         }
+        r.set()
     print('Generated elements:', TOTAL_ELEMENTS)  # Debug print
 
 
