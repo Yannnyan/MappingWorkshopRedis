@@ -181,19 +181,32 @@ def query_elements():
     region = data.get('region')
 
     elements_res = {}
+    user_elements_key = f"user:{user_id}:elements"
+    elements = r.smembers(user_elements_key)
+    
+    if query_type == "type":
+        for element_obj in elements:
+            element_json = r.json().get(f"{element_obj}")
+            if element_type == element_json["type"]:
+                elements_res[element_obj] = element_json
 
+    elif query_type == "region":
+        for element_obj in elements:
+            element_json = r.json().get(f"{element_obj}")
+            if region["lat_max"] > element_json["lat"] and region["lat_min"] < element_json["lat"] and region["lng_max"] > element_json["lng"] and region["lng_min"] < element_json["lng"]:
+                elements_res[element_obj] = element_json
+
+    elif query_type == "type_region":
+        for element_obj in elements:
+            element_json = r.json().get(f"{element_obj}")
+            if element_type == element_json["type"] and region["lat_max"] > element_json["lat"] and region["lat_min"] < element_json["lat"] and region["lng_max"] > element_json["lng"] and region["lng_min"] < element_json["lng"]:
+                elements_res[element_obj] = element_json
     ###
     # QUERY AND FILTER CODE GOES HERE
     # QUERY AND FILTER CODE GOES HERE
     # QUERY AND FILTER CODE GOES HERE
     # ...
-    user_elements_key = f"user:{user_id}:elements"
-    # user_stream_key = f"user:{user_id}:stream"
-    elements = r.smembers(user_elements_key)
-
-    elements_res = {}
-    for element_obj in elements:
-        elements_res[element_obj] = r.json().get(f"{element_obj}")
+    
     ###
 
     return jsonify({"elements": elements_res})
