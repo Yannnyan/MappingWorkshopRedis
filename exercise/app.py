@@ -26,6 +26,8 @@ from redis.commands.search.query import GeoFilter, NumericFilter, Query
 from redis.commands.search.result import Result
 from redis.commands.search.suggestion import Suggestion
 import uuid
+from shapely.geometry import Point, Polygon
+
 #ss
 app = Flask(__name__, static_folder='static', template_folder='templates')
 app.config['SECRET_KEY'] = 'secret!'
@@ -76,7 +78,7 @@ def create_index():
 ##
 ###
 def generate_elements():
-    for i in range(TOTAL_ELEMENTS):
+    for i in range(1):
 
         lat = random.uniform(-90, 90)
         lng = random.uniform(-180, 180)
@@ -228,13 +230,23 @@ def query_polygon():
     user_id = data.get('user_id')
     # Convert points to a string format suitable for Redis
     polygon = " ".join([f"{p[0]} {p[1]}," for p in points])
-
+    polygon_coords = [(p[0],p[1]) for p in points]
     elements_res = {}
     ###
     # QUERY AND FILTER CODE GOES HERE
     # QUERY AND FILTER CODE GOES HERE
     # QUERY AND FILTER CODE GOES HERE
     # ...
+    user_elements_key = f"user:{user_id}:elements"
+    # user_stream_key = f"user:{user_id}:stream"
+    elements = r.smembers(user_elements_key)
+    polygon_shapely = Polygon(polygon_coords)
+    for element in elements:
+        point = r.json().get(f"{element}")
+        point = [point['lng'], point['lat']]
+        print(point[0],point[1],point)
+        if Point(float(point[0]),float(point[1])).within(polygon_shapely):
+            elements_res[element] = r.json().get(f"{element}")
     ###
 
     return jsonify({"elements": elements_res})
